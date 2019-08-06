@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t carey/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true careys/react-test npm test
+
+after_success:
+  - docker build -t careys/multi-client ./client
+  - docker build -t careys/multi-nginx ./nginx
+  - docker build -t careys/multi-server ./server
+  - docker build -t careys/multi-worker ./worker
+
+# login to cocker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# send the images to DockerHub
+  - docker push careys/multi-client
+  - docker push careys/multi-nginx
+  - docker push careys/multi-server
+  - docker push careys/multi-worker
